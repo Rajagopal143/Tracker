@@ -4,9 +4,13 @@ import sqlite3
 from datetime import datetime
 import openpyxl
 from io import BytesIO
+import os
 
 app = Flask(__name__, static_folder='photos')
 CORS(app)
+
+env = os.getenv("ENV", "development")  # default to 'development'
+
 
 # Connect to SQLite
 def get_db():
@@ -119,5 +123,10 @@ def load_sample():
     conn.commit()
     return jsonify({'message': 'Sample data loaded'}), 200
 
-if __name__ == '__main__':
+if env == "development":
     app.run(debug=True)
+else:
+    def handler(environ, start_response):
+        from werkzeug.middleware.dispatcher import DispatcherMiddleware
+        app_dispatch = DispatcherMiddleware(app)
+        return app_dispatch(environ, start_response)
